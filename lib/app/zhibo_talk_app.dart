@@ -39,7 +39,10 @@ class _ZhiboTalkAppState extends State<ZhiboTalkApp> {
       redirect: (context, state) {
         final auth = widget.container.authCubit.state;
         final onLogin = state.matchedLocation == '/login';
-        if (auth.status == AuthStatus.initializing || auth.status == AuthStatus.authenticating) {
+        if (auth.status == AuthStatus.initializing) {
+          return onLogin ? null : '/login';
+        }
+        if (auth.status == AuthStatus.authenticating) {
           return null;
         }
         if (!auth.isAuthenticated && !onLogin) return '/login';
