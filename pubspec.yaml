@@ -1,0 +1,83 @@
+name: zhibo_im_win
+description: "猩子Talk PC 客户端（Windows/macOS）：腾讯云 IM 互通 + AI 辅助回答"
+# 私有应用，禁止误发布到 pub.dev
+publish_to: 'none'
+
+# 版本号：x.y.z+build。build 同时作为 Windows 文件版本的第四段、macOS CFBundleVersion。
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # ───────────── 腾讯云 IM ─────────────
+  # 与 App(study_app) 保持完全一致的 SDK 版本，保证协议/行为一致。
+  tencent_cloud_chat_sdk: 8.8.7357
+  # App 维护的 UIKit 分支(5.0.1)：已含 rich_media_message / large_file_message / 语音手势 / 桌面宽屏布局。
+  # 本地开发默认使用与本仓库同级的 study_app 检出目录；CI/其它机器的 git 写法见 README「依赖管理」。
+  tencent_cloud_chat_uikit:
+    path: ../study_app/chat-uikit-flutter
+
+  # ───────────── 架构 / 网络 / 存储 ─────────────
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.5
+  go_router: ">=14.0.0 <17.0.0"
+  dio: ^5.9.0
+  shared_preferences: ^2.5.3
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  # AES-GCM（userToken 生成，与 App 的 AESUtil 完全同源）
+  pointycastle: ^4.0.0
+  uuid: ^4.5.2
+  logging: ^1.3.0
+  intl: ^0.20.2
+  package_info_plus: ^8.3.1
+  url_launcher: ^6.3.2
+
+  # ───────────── AI 辅助回答面板 ─────────────
+  # UIKit 固定依赖 1.1.2，这里保持一致，避免双版本。
+  gpt_markdown: 1.1.2
+
+  # ───────────── 桌面能力 ─────────────
+  window_manager: ^0.5.1
+  tray_manager: ^0.5.2
+  flutter_local_notifications: ^19.4.1
+  # macOS Dock 角标（Windows 无此插件，业务层按平台判断）
+  app_badge_plus: ^1.2.3
+  file_picker: ^9.2.3
+
+  # ───────────── Windows 平台实现补充 ─────────────
+  # UIKit 使用的 video_player / just_audio 官方不含 Windows 实现，需额外引入实现包，
+  # 它们通过联合插件机制自动注册，无需修改 UIKit 代码。
+  video_player_win: ^3.1.1
+  just_audio_windows: ^0.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  # Windows MSIX 打包（dart run msix:create），配置见文件末尾 msix_config
+  msix: ^3.16.9
+
+# 覆盖项仅保留 UIKit/App 已验证过的最小集合。
+dependency_overrides:
+  uuid: ^4.5.2
+  # gpt_markdown 依赖的 flutter_math_fork 需要适配 Flutter 3.35 的分支（App 同款）。
+  flutter_math_fork:
+    git:
+      url: https://github.com/woaiso/flutter_math.git
+      ref: "feature/adapt-flutter-3_35"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/tray/
