@@ -25,7 +25,7 @@ class AuthCubit extends Cubit<AuthState> {
   final SessionStore _store;
   final AppLogger _log = AppLogger('AuthCubit');
 
-  /// 是否处于「内部联调」兜底登录链路（登录页据此展示提示，见 docs/backend-requirements.md 1.3）。
+  /// 是否处于智博在线 App 兜底登录链路（登录页展示警告横幅）。
   bool get isInternalFallbackLogin => _repository.mode == AuthMode.appAccount;
 
   /// 读取最近使用的手机号，用于登录页回填。
@@ -86,7 +86,7 @@ class AuthCubit extends Cubit<AuthState> {
     final normalized = phone.trim();
     final verifyCode = code.trim();
     if (!isValidPhone(normalized)) return _notice('请输入正确的 11 位手机号');
-    if (verifyCode.length < 4) return _notice('请输入短信验证码');
+    if (verifyCode.length != 6) return _notice('验证码为 6 位数字');
 
     emit(state.copyWith(status: AuthStatus.authenticating, message: '', canRetryRestore: false));
     try {
@@ -98,6 +98,10 @@ class AuthCubit extends Cubit<AuthState> {
       _log.warn('登录失败 kind=${error.kind.name} failCode=${error.failCode}');
       emit(state.copyWith(status: AuthStatus.unauthenticated, clearSession: true, clearSign: true));
       _notice(error.message);
+    } catch (error, stack) {
+      _log.error('登录失败（未预期异常）', error, stack);
+      emit(state.copyWith(status: AuthStatus.unauthenticated, clearSession: true, clearSign: true));
+      _notice(error is StateError ? error.message : '登录失败，请稍后重试');
     }
   }
 

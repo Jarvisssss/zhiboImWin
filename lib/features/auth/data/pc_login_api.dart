@@ -59,9 +59,22 @@ class PcLoginResult {
       imUserSig: imUserSig,
       sdkAppId: sdkAppIdRaw is num ? sdkAppIdRaw.toInt() : int.tryParse('${sdkAppIdRaw ?? ''}') ?? 0,
       role: UserRole.fromRaw(info['userRole']),
-      nick: '${info['nick'] ?? ''}',
+      nick: _readNick(info),
       avatar: '${info['avatar'] ?? ''}',
     );
+  }
+
+  /// 与小程序 `userInfo` 字段对齐（`nick` 或 `personInfo`）。
+  static String _readNick(Map<dynamic, dynamic> info) {
+    final nick = '${info['nick'] ?? ''}';
+    if (nick.isNotEmpty) return nick;
+    final person = info['personInfo'];
+    if (person is Map) {
+      final fromPerson = '${person['name'] ?? person['nick'] ?? ''}';
+      if (fromPerson.isNotEmpty) return fromPerson;
+    }
+    if (person is String && person.isNotEmpty) return person;
+    return '';
   }
 }
 
@@ -70,6 +83,9 @@ class PcLoginApi {
   /// 创建接口封装。
   PcLoginApi({required ApiClient client}) : _client = client;
 
+  /// 请求体 `clientType`；dev 环境对 `code` 非空校验，PC 暂用同值占位（见 docs/backend-requirements.md B1）。
+  static const String clientTypePc = 'pc';
+
   final ApiClient _client;
 
   /// 发送登录验证码（沿用小程序接口 `getCaptchaLogin`）。
@@ -77,7 +93,7 @@ class PcLoginApi {
     await _client.post(ImPaths.miniGetCaptcha, body: {'cel': phone});
   }
 
-  /// 手机号 + 验证码登录；`clientType=pc` 时后端无需微信 `code`，并按角色白名单拦截学员。
+  /// 手机号 + 验证码登录（小程序同源 `phoneAuditLogin`，PC 传 [clientTypePc]）。
   Future<PcLoginResult> login({
     required String phone,
     required String captcha,
@@ -89,7 +105,8 @@ class PcLoginApi {
       body: {
         'username': phone,
         'captcha': captcha,
-        'clientType': 'pc',
+        'code': clientTypePc,
+        'clientType': clientTypePc,
         'deviceId': deviceId,
         'deviceName': deviceName,
       },

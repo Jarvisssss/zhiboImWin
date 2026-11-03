@@ -6,13 +6,13 @@ abstract final class AppDefines {
   /// 运行环境：`pro`（默认，正式）或 `dev`（测试）。
   static const String env = String.fromEnvironment('ZB_ENV', defaultValue: 'pro');
 
-  /// 登录模式：`app`（兜底，复用 App 主 API 验证码登录）或 `pc`（PC 专用登录接口，后端就绪后启用）。
-  static const String authMode = String.fromEnvironment('ZB_AUTH_MODE', defaultValue: 'app');
+  /// 登录模式：`pc`（猩子Talk 小程序同源 `/im/im/login/*` + `clientType=pc`）或 `app`（智博在线 App 主 API，仅内部联调）。
+  static const String authMode = String.fromEnvironment('ZB_AUTH_MODE', defaultValue: 'pc');
 
-  /// 访问 `/im/app/login/*` 的鉴权头策略：`userToken`（方案 A，AES）或 `accessToken`（方案 B）。
-  static const String authHeader = String.fromEnvironment('ZB_AUTH_HEADER', defaultValue: 'userToken');
+  /// 访问 `/im/app/login/*` 的鉴权头：`accessToken`（小程序 `X-Access-Token`）或 `userToken`（App AES，需 [imTokenKey]）。
+  static const String authHeader = String.fromEnvironment('ZB_AUTH_HEADER', defaultValue: 'accessToken');
 
-  /// 生成 `userToken` 使用的 AES 密钥（32 字节字符串）。方案 B 下无需配置。
+  /// 生成 `userToken` 使用的 AES 密钥（32 字节）。仅 `ZB_AUTH_HEADER=userToken` 时需要。
   static const String imTokenKey = String.fromEnvironment('ZB_IM_TOKEN_KEY');
 
   /// 「班主任回复助手」扣子 Bot ID（可选，优先级低于后端 lstAiTch 下发的 scene=reply_assistant）。
@@ -27,14 +27,22 @@ abstract final class AppDefines {
 
 /// 登录模式（见 docs/backend-requirements.md B1）。
 enum AuthMode {
-  /// 兜底：App 主 API 验证码登录 + `/im/app/login/getUserSig`（仅限内部联调）。
-  appAccount,
+  /// 猩子Talk 小程序同源：EIP `/im/im/login/getCaptchaLogin`、`phoneAuditLogin`（PC 传 `clientType=pc`）。
+  pcLogin,
 
-  /// 目标：PC 专用登录接口 `/im/im/login/phoneAuditLogin`（`clientType=pc`）。
-  pcLogin;
+  /// 智博在线 App 兜底：主 API `/account/auth/*` + AES `userToken`（仅限内部联调，勿用于猩子Talk 正式环境）。
+  appAccount;
 
-  /// 从构建期字符串解析，未知值回退到 [appAccount]。
-  static AuthMode parse(String value) => value.trim().toLowerCase() == 'pc' ? pcLogin : appAccount;
+  /// 从构建期字符串解析；未知值回退到 [pcLogin]。
+  static AuthMode parse(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'app':
+        return appAccount;
+      case 'pc':
+      default:
+        return pcLogin;
+    }
+  }
 }
 
 /// 访问云校园 `/im/app/login/*` 接口的鉴权头策略（见 docs/backend-requirements.md B2）。

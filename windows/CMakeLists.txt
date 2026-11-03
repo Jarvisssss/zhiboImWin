@@ -32,6 +32,14 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Third-party Windows plugins (e.g. just_audio_windows) ship UTF-8 headers without
+# BOM. On zh-CN code pages MSVC raises C4819, and /WX below turns that into C2220.
+# Use explicit charset flags (not /utf-8): tencent_cloud_chat_sdk already sets
+# /source-charset:utf-8 and cl.exe rejects mixing /utf-8 with that (error D8016).
+if(MSVC)
+  add_compile_options(/source-charset:utf-8 /execution-charset:utf-8)
+endif()
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by

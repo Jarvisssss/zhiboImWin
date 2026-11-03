@@ -24,7 +24,6 @@ class DependencyContainer {
     final store = PrefsSessionStore(prefs);
     final env = AppEnv.current;
 
-    final mainApi = ApiClient(baseUrl: env.apiHost, style: EnvelopeStyle.main, name: 'MainApi');
     final eipApi = ApiClient(baseUrl: env.eipHost, style: EnvelopeStyle.eip, name: 'EipApi');
 
     final authMode = AuthMode.parse(AppDefines.authMode);
@@ -48,7 +47,9 @@ class DependencyContainer {
           store: store,
         ),
       AuthMode.appAccount => AppAccountAuthRepository(
-          accountApi: AccountApi(client: mainApi),
+          accountApi: AccountApi(
+            client: ApiClient(baseUrl: env.apiHost, style: EnvelopeStyle.main, name: 'MainApi'),
+          ),
           imApi: imApi,
         ),
     };

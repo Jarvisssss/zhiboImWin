@@ -161,7 +161,7 @@ class _FallbackBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: const Text(
-        '当前为内部联调登录链路（App 主 API），未注册手机号可能被自动建号。正式上线须切换 PC 专用接口，详见 docs/backend-requirements.md。',
+        '当前为智博在线 App 兜底登录（非猩子Talk 小程序接口），未注册手机号可能被自动建号。猩子Talk 请使用 ZB_AUTH_MODE=pc，详见 docs/backend-requirements.md。',
         style: TextStyle(fontSize: 13, height: 1.4),
       ),
     );

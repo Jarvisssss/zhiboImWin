@@ -26,7 +26,11 @@
 小程序登录接口 `POST /im/login/phoneAuditLogin` 依赖 `wx.login()` 得到的微信 `code`，桌面端拿不到该参数；
 App 的账号体系（主 API `/account/auth/*`）与小程序不是同一套登录态。PC 端面向班主任 / 管理人员，需要一个**不依赖微信、带角色校验**的登录入口。
 
-### 1.2 建议契约（新增，或改造 `phoneAuditLogin` 使 `code` 在 `clientType=pc` 时可省略）
+### 1.2 建议契约（新增，或改造 `phoneAuditLogin` 使 `clientType=pc` 时可省略微信 `code`）
+
+> **联调现状（dev）**：服务端仍对 `code` 做非空校验（缺字段返回「微信code不能为空：code」）。
+> PC 客户端暂传 `code: "pc"`（与 `clientType` 同值占位）；**验证码通过后服务端必须识别 `clientType=pc` 并跳过微信换票**，
+> 否则会继续报 failCode=2。正式环境请按下列契约去掉对 PC 的 `code` 硬依赖。
 
 发送验证码（沿用现有接口，无需改动）：
 

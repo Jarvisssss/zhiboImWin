@@ -7,13 +7,8 @@
 #   (fails with ERROR_INVALID_FUNCTION), even with Developer Mode enabled.
 #   So the project must live on a real local drive (C:\dev) to build.
 #
-# Why CL=/utf-8?
-#   Some third-party Flutter Windows plugins (e.g. just_audio_windows) ship
-#   UTF-8-without-BOM C++ headers. On a zh-CN (code page 936) Windows image,
-#   cl.exe misreads them and raises C4819, which this project's generated
-#   vcxproj escalates to a hard error (C2220). Setting the CL env var is the
-#   standard MSVC-documented fix (cl.exe appends it to every invocation) and
-#   avoids editing vendored plugin source.
+# MSVC UTF-8 charset flags are set in windows/CMakeLists.txt (see comment there re
+# tencent_cloud_chat_sdk / D8016).
 #
 # Usage (from macOS):
 #   prlctl exec "Windows 11" --current-user powershell -NoProfile -ExecutionPolicy Bypass `
@@ -55,8 +50,16 @@ foreach ($leaf in @('.flutter-plugins-dependencies', '.flutter-plugins')) {
   if (Test-Path $p) { Remove-Item -LiteralPath $p -Force -ErrorAction SilentlyContinue }
 }
 
-$env:CL = '/utf-8'
 Set-Location $projectDir
+
+$cmakeLists = Join-Path $projectDir 'windows\CMakeLists.txt'
+$cmakeCache = Join-Path $projectDir 'build\windows\x64\CMakeCache.txt'
+if ((Test-Path $cmakeLists) -and (Test-Path $cmakeCache)) {
+  if ((Get-Item $cmakeLists).LastWriteTime -gt (Get-Item $cmakeCache).LastWriteTime) {
+    Write-Output 'windows/CMakeLists.txt is newer than CMake cache; removing build\windows'
+    Remove-Item -Recurse -Force (Join-Path $projectDir 'build\windows') -ErrorAction SilentlyContinue
+  }
+}
 
 $flutterBat = Join-Path $FlutterRoot 'bin\flutter.bat'
 & $flutterBat pub get
@@ -64,8 +67,24 @@ if ($LASTEXITCODE -ne 0) { throw 'flutter pub get failed' }
 
 $buildArgs = @('build', 'windows', '--dart-define-from-file=config\env.local.json')
 if ($Release) { $buildArgs += '--release' }
-& $flutterBat @buildArgs
-if ($LASTEXITCODE -ne 0) { throw 'flutter build windows failed' }
+$buildLog = Join-Path $projectDir 'build\windows\flutter_build_last.log'
+New-Item -ItemType Directory -Force -Path (Split-Path $buildLog) | Out-Null
+# Flutter writes NuGet progress to stderr; with $ErrorActionPreference=Stop that aborts the script.
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+try {
+  & $flutterBat @buildArgs 2>&1 | Tee-Object -FilePath $buildLog
+  $buildExit = $LASTEXITCODE
+} finally {
+  $ErrorActionPreference = $prevEap
+}
+if ($buildExit -ne 0) {
+  Write-Error 'flutter build windows failed. Recent compiler errors:'
+  Select-String -Path $buildLog -Pattern 'error C|error D|error LNK|fatal error' |
+    Select-Object -Last 15 |
+    ForEach-Object { Write-Output $_.Line }
+  throw 'flutter build windows failed'
+}
 
 Write-Output 'DONE'
 Write-Output (Join-Path $LocalRoot 'zhiboImWin\build\windows\x64\runner\Release\zhibo_im_win.exe')

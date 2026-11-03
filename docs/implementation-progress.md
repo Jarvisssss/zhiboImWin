@@ -41,7 +41,6 @@
 
 ## 下一步建议
 
-1. macOS / Windows 走通兜底登录（`ZB_AUTH_MODE=app`），验证自定义消息渲染。
+1. macOS / Windows 走通猩子Talk 登录（默认 `ZB_AUTH_MODE=pc` + `accessToken`），验证 IM 与自定义消息渲染。
 2. 联调 Coze SSE + AI 面板 UI。
-3. 后端 B1 就绪后切 `ZB_AUTH_MODE=pc`。
-4. 阶段 3–5：托盘、通知、MSIX 打包。
+3. 阶段 3–5：托盘、通知、MSIX 打包。

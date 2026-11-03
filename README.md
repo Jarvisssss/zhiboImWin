@@ -12,7 +12,7 @@
 ## 本地开发
 
 1. 安装 FVM 并 `fvm use 3.35.0`（或直接使用 `~/fvm/versions/3.35.0/bin/flutter`）。
-2. 复制 `config/env.example.json` 为 `config/env.local.json`，填入 `ZB_IM_TOKEN_KEY` 等（**勿提交**）。
+2. 复制 `config/env.example.json` 为 `config/env.local.json`（默认与猩子Talk 小程序一致：`ZB_AUTH_MODE=pc`、`ZB_AUTH_HEADER=accessToken`，**无需** `ZB_IM_TOKEN_KEY`；**勿提交**）。
 3. 依赖：
 
 ```bash
@@ -60,15 +60,19 @@ Mac 改代码后需重跑 `sync_and_build.ps1` 再测 exe。
 
 Release exe 无完整 HTTP 正文；用 Debug `flutter run`，日志在 PowerShell 窗口（`MainApi` / `AuthCubit`）。完整 JSON 用 Fiddler/Charles 抓 `api-dev.zhibojiaoyu.cn`（dev 环境）。
 
-**VM：Debug 运行**（Mac 改代码后先执行上方 `sync_and_build.ps1`）
+**VM：Debug 运行**（Mac 改 `windows/CMakeLists.txt` 或 C++ 相关后，先在 Mac 重跑 `sync_and_build.ps1`）
+
+推荐用脚本（会清理过期的 `build\windows` CMake 缓存，并在失败时打印 `cl` 错误）：
 
 ```powershell
-Stop-Process -Name zhibo_im_win,dart -Force -ErrorAction SilentlyContinue
-Remove-Item C:\dev\zhiboImWin\.flutter-plugins-dependencies,C:\dev\zhiboImWin\.flutter-plugins -Force -ErrorAction SilentlyContinue
-$env:CL = '/utf-8'
-Set-Location C:\dev\zhiboImWin
-& 'C:\Users\atticus\dev\flutter-3.35.0\bin\flutter.bat' pub get
-& 'C:\Users\atticus\dev\flutter-3.35.0\bin\flutter.bat' run -d windows --dart-define-from-file=config\env.local.json
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\dev\zhiboImWin\scripts\windows\run_debug.ps1
+```
+
+若仍报 `Build process failed` 且约几十秒就结束，多半是 **未同步最新 `windows/CMakeLists.txt`** 或 **旧 CMake 缓存仍含 `/utf-8`**，手动清一次再跑：
+
+```powershell
+Remove-Item -Recurse -Force C:\dev\zhiboImWin\build\windows -ErrorAction SilentlyContinue
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\dev\zhiboImWin\scripts\windows\run_debug.ps1
 ```
 
 热重载：`r` / `R` / `q`。未同步到 `C:\dev` 时先在 Mac 重跑脚本。
