@@ -115,6 +115,7 @@ class ApiClient {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return const ApiException(kind: ApiErrorKind.network, message: '网络超时，请检查网络后重试');
       case DioExceptionType.cancel:
         return const ApiException(kind: ApiErrorKind.network, message: '请求已取消');

@@ -26,7 +26,58 @@ fvm flutter run -d macos \
   --dart-define-from-file=config/env.local.json
 ```
 
-Windows 构建请在 **x64 Dart/Flutter** 环境下进行（Parallels ARM64 VM 见 `scripts/windows/`）。
+### Windows 11（Parallels）— 方式 B
+
+在 VM 本地盘 `C:\dev\zhiboImWin` 构建（勿在 `\\Mac\Home\...` 共享路径下 build）。VM 名以 `prlctl list -a` 为准，一般为 `Windows 11`。
+
+**Mac：同步 + Release 构建**
+
+```bash
+prlctl list -a
+prlctl resume "Windows 11"   # 仅 paused 时需要
+
+prlctl exec "Windows 11" --current-user powershell -NoProfile -ExecutionPolicy Bypass \
+  -File '\\Mac\Home\WebstormProjects\zhiboImWin\scripts\windows\sync_and_build.ps1'
+```
+
+**VM：运行 Release**
+
+```powershell
+C:\dev\zhiboImWin\build\windows\x64\runner\Release\zhibo_im_win.exe
+```
+
+**VM：`pub get` 写 `.flutter-plugins-dependencies` 失败时**
+
+```powershell
+Stop-Process -Name zhibo_im_win,dart -Force -ErrorAction SilentlyContinue
+Remove-Item C:\dev\zhiboImWin\.flutter-plugins-dependencies,C:\dev\zhiboImWin\.flutter-plugins -Force -ErrorAction SilentlyContinue
+# 再在 Mac 重跑 sync_and_build.ps1
+```
+
+Mac 改代码后需重跑 `sync_and_build.ps1` 再测 exe。
+
+### Windows 调试（登录接口 / 控制台日志）
+
+Release exe 无完整 HTTP 正文；用 Debug `flutter run`，日志在 PowerShell 窗口（`MainApi` / `AuthCubit`）。完整 JSON 用 Fiddler/Charles 抓 `api-dev.zhibojiaoyu.cn`（dev 环境）。
+
+**VM：Debug 运行**（Mac 改代码后先执行上方 `sync_and_build.ps1`）
+
+```powershell
+Stop-Process -Name zhibo_im_win,dart -Force -ErrorAction SilentlyContinue
+Remove-Item C:\dev\zhiboImWin\.flutter-plugins-dependencies,C:\dev\zhiboImWin\.flutter-plugins -Force -ErrorAction SilentlyContinue
+$env:CL = '/utf-8'
+Set-Location C:\dev\zhiboImWin
+& 'C:\Users\atticus\dev\flutter-3.35.0\bin\flutter.bat' pub get
+& 'C:\Users\atticus\dev\flutter-3.35.0\bin\flutter.bat' run -d windows --dart-define-from-file=config\env.local.json
+```
+
+热重载：`r` / `R` / `q`。未同步到 `C:\dev` 时先在 Mac 重跑脚本。
+
+**Mac：对照调试**
+
+```bash
+fvm flutter run -d macos --dart-define-from-file=config/env.local.json
+```
 
 ## 文档
 
