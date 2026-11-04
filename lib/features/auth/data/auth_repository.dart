@@ -31,7 +31,7 @@ abstract interface class AuthRepository {
   /// 发送登录验证码。
   Future<void> sendCode(String phone);
 
-  /// 验证码登录；返回会话与 IM 凭据。学员等不允许的角色会抛出 failCode=3 的 [ApiException]。
+  /// 验证码登录；返回会话与 IM 凭据。角色是否允许使用 PC 由服务端校验。
   Future<LoginResult> loginWithCode({required String phone, required String code});
 
   /// 使用已保存的会话重新获取 IM 凭据（启动自动登录 / userSig 续期）。
@@ -39,17 +39,6 @@ abstract interface class AuthRepository {
 
   /// 退出登录（服务端部分 best effort，不抛异常）。
   Future<void> logout(AuthSession session);
-}
-
-/// 角色白名单校验：学员、AI 助教与未知角色一律不允许使用 PC 客户端。
-void ensureRoleAllowed(UserRole role) {
-  if (!role.canUseDesktop) {
-    throw const ApiException(
-      kind: ApiErrorKind.business,
-      message: '该账号角色暂不支持 PC 客户端，请使用「猩子Talk」小程序或智博在线 App',
-      failCode: 3,
-    );
-  }
 }
 
 /// 兜底链路：App 主 API 验证码登录 → `/im/app/login/getUserSig`。仅限内部联调。
@@ -81,7 +70,6 @@ class AppAccountAuthRepository implements AuthRepository {
       avatar: user.avatarUrl,
     );
     final sign = await _imApi.fetchUserSig(session: draft);
-    ensureRoleAllowed(sign.userRole);
     return LoginResult(
       session: draft.copyWith(imUserId: sign.imUserId, role: sign.userRole),
       sign: sign,
@@ -89,11 +77,7 @@ class AppAccountAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<ImSign> fetchImSign(AuthSession session) async {
-    final sign = await _imApi.fetchUserSig(session: session);
-    ensureRoleAllowed(sign.userRole);
-    return sign;
-  }
+  Future<ImSign> fetchImSign(AuthSession session) async => _imApi.fetchUserSig(session: session);
 
   @override
   Future<void> logout(AuthSession session) async {
@@ -134,7 +118,6 @@ class PcLoginAuthRepository implements AuthRepository {
       deviceId: await _store.deviceId(),
       deviceName: describeDevice(),
     );
-    ensureRoleAllowed(result.role);
     final sdkAppId = AppDefines.resolveSdkAppId(result.sdkAppId, fallbackSdkAppId: _fallbackSdkAppId);
     if (sdkAppId <= 0) {
       throw const ApiException(
