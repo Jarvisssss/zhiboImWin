@@ -1584,7 +1584,7 @@ packages:
   shared_video_player:
     dependency: transitive
     description:
-      path: "../study_app/chat-uikit-flutter/packages/shared_video_player"
+      path: "third_party/chat-uikit-flutter/packages/shared_video_player"
       relative: true
     source: path
     version: "0.0.0"
@@ -1732,7 +1732,7 @@ packages:
   tencent_cloud_chat_uikit:
     dependency: "direct main"
     description:
-      path: "../study_app/chat-uikit-flutter"
+      path: "third_party/chat-uikit-flutter"
       relative: true
     source: path
     version: "5.0.1"

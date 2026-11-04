@@ -6,13 +6,18 @@
 
 - Flutter **3.35.0**（FVM，见 `.fvmrc`）
 - `tencent_cloud_chat_sdk: 8.8.7357`
-- `tencent_cloud_chat_uikit`：本地路径 `../study_app/chat-uikit-flutter`（与 App 共用同一套 UIKit 源码；PC 独有逻辑放在本仓库 `lib/`）
+- `tencent_cloud_chat_uikit`：git submodule `third_party/chat-uikit-flutter`（[xchat-uikit-flutter](https://github.com/Jarvisssss/xchat-uikit-flutter)）；PC 独有业务逻辑在本仓库 `lib/`
 - 桌面：`window_manager`、`tray_manager`（后续阶段启用）
 
 ## 本地开发
 
 1. 安装 FVM 并 `fvm use 3.35.0`（或直接使用 `~/fvm/versions/3.35.0/bin/flutter`）。
-2. 与本仓库 **同级** 检出 `study_app`（至少包含 `chat-uikit-flutter`、`shared_video_player`，供 path 依赖解析）。
+2. 初始化 submodule（首次克隆或更新 UIKit 后执行）：
+
+```bash
+git submodule update --init --recursive
+```
+
 3. 复制 `config/env.example.json` 为 `config/env.local.json`（默认与猩子Talk 小程序一致：`ZB_AUTH_MODE=pc`、`ZB_AUTH_HEADER=accessToken`，**无需** `ZB_IM_TOKEN_KEY`；**勿提交**）。
 4. 依赖：
 

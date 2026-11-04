@@ -33,8 +33,6 @@ function Sync-Dir($name, [string[]]$excludeDirs) {
 
 New-Item -ItemType Directory -Force -Path $LocalRoot | Out-Null
 Sync-Dir 'zhiboImWin' @('.git', 'build', '.dart_tool', 'ephemeral')
-Sync-Dir 'study_app\chat-uikit-flutter' @('.git', '.dart_tool')
-Sync-Dir 'study_app\shared_video_player' @('.git', '.dart_tool')
 
 $projectDir = Join-Path $LocalRoot 'zhiboImWin'
 

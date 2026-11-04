@@ -1,0 +1,3 @@
+[submodule "third_party/chat-uikit-flutter"]
+	path = third_party/chat-uikit-flutter
+	url = https://github.com/Jarvisssss/xchat-uikit-flutter.git
