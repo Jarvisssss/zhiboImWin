@@ -91,7 +91,7 @@ class _ZhiboTalkAppState extends State<ZhiboTalkApp> {
         await widget.container.authCubit.logout(reason: '当前账号无权使用 PC 客户端');
         return;
       }
-      ensureLargeFileConfig(widget.container.imApi);
+      ensureLargeFileConfig(widget.container.cosApi);
       CozeTokenManager.bind(widget.container.imApi);
       final result = await im.start(sign);
       if (result.status == ImConnectionStatus.connected) {

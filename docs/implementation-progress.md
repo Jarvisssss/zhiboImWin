@@ -37,7 +37,10 @@
 ## 当前卡点
 
 - 登录与自定义消息渲染需本机短信验证码联调（`config/env.local.json` 本地注入，勿入库）。
+- **70107**：IM UserID 未导入或环境/SDKAppID 不一致 → 对照 `[PcLoginAuthRepository]` / `[ImSessionManager]` 日志，找后端导入（非 Windows 专属）。
+- **媒体通道**：UIKit 已在桌面端跳过 Android/iOS 原生 progress 通道；发视频走 Dart 直传路径（无 App 级转码）。
 - Windows 在 VM 本地盘 `C:\dev\zhiboImWin` 构建，改代码后需重跑 `sync_and_build.ps1`。
+- macOS：Xcode 27+ 需 deployment target ≥ 12.0（已改 Podfile）；日常联调用 **Debug** build。
 
 ## 下一步建议
 

@@ -135,10 +135,17 @@ class PcLoginAuthRepository implements AuthRepository {
       deviceName: describeDevice(),
     );
     ensureRoleAllowed(result.role);
-    final sdkAppId = result.sdkAppId > 0 ? result.sdkAppId : _fallbackSdkAppId;
+    final sdkAppId = AppDefines.resolveSdkAppId(result.sdkAppId, fallbackSdkAppId: _fallbackSdkAppId);
     if (sdkAppId <= 0) {
-      throw const ApiException(kind: ApiErrorKind.parse, message: '登录返回缺少 sdkAppId，请联系管理员（见 docs/backend-requirements.md B1）');
+      throw const ApiException(
+        kind: ApiErrorKind.parse,
+        message: '未配置 IM SDKAppID，请在构建参数中设置 ZB_SDK_APP_ID（见 config/env.example.json）',
+      );
     }
+    _log.info(
+      'PC 登录成功 imUserId=${AppLogger.redact(result.imUserId)} '
+      'userId=${AppLogger.redact(result.userId)} sdkAppId=$sdkAppId role=${result.role.name}',
+    );
     return LoginResult(
       session: AuthSession(
         token: result.token,
@@ -158,11 +165,7 @@ class PcLoginAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<ImSign> fetchImSign(AuthSession session) async {
-    final sign = await _imApi.fetchUserSig(session: session);
-    ensureRoleAllowed(sign.userRole);
-    return sign;
-  }
+  Future<ImSign> fetchImSign(AuthSession session) async => _imApi.fetchUserSig(session: session);
 
   @override
   Future<void> logout(AuthSession session) async {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 
@@ -65,6 +66,72 @@ class ApiClient {
     CancelToken? cancelToken,
   }) {
     return _send('POST', path, body: body, headers: headers, cancelToken: cancelToken);
+  }
+
+  /// multipart 上传（如小程序 `wx.uploadFile` → `/sys/cos/upload`）。
+  ///
+  /// 返回信封中的 [ApiEnvelope.data] 与顶层 [ApiEnvelope.message]（fileId 有时写在 message 字段）。
+  Future<({Object? result, String message})> uploadMultipart(
+    String path, {
+    required String filePath,
+    required String fileFieldName,
+    required Map<String, String> fields,
+    Map<String, String>? headers,
+    CancelToken? cancelToken,
+    void Function(int sent, int total)? onProgress,
+    Duration sendTimeout = const Duration(minutes: 30),
+    Duration receiveTimeout = const Duration(seconds: 30),
+  }) async {
+    final merged = <String, String>{
+      ...?await headersProvider?.call(),
+      ...?headers,
+    };
+    final file = File(filePath);
+    if (!file.existsSync()) {
+      throw const ApiException(kind: ApiErrorKind.parse, message: '上传文件不存在');
+    }
+    final formData = FormData.fromMap({
+      ...fields,
+      fileFieldName: await MultipartFile.fromFile(filePath, filename: fields['fileName']),
+    });
+    final stopwatch = Stopwatch()..start();
+    Response<dynamic> response;
+    try {
+      response = await _dio.post<dynamic>(
+        path,
+        data: formData,
+        cancelToken: cancelToken,
+        onSendProgress: onProgress == null
+            ? null
+            : (sent, total) => onProgress(sent, total <= 0 ? sent : total),
+        options: Options(
+          method: 'POST',
+          headers: merged,
+          sendTimeout: sendTimeout,
+          receiveTimeout: receiveTimeout,
+          contentType: 'multipart/form-data',
+        ),
+      );
+    } on DioException catch (error) {
+      _log.warn('POST(multipart) $path 失败 type=${error.type.name} elapsed=${stopwatch.elapsedMilliseconds}ms');
+      throw _mapDioError(error);
+    }
+
+    final httpStatus = response.statusCode;
+    _log.debug('POST(multipart) $path -> HTTP $httpStatus ${stopwatch.elapsedMilliseconds}ms');
+    final envelope = ApiEnvelope.parse(response.data, style, httpStatus: httpStatus);
+    if (envelope.success) {
+      return (result: envelope.data, message: envelope.message);
+    }
+
+    final authExpired = envelope.isAuthExpired(style, httpStatus);
+    throw ApiException(
+      kind: authExpired ? ApiErrorKind.authExpired : ApiErrorKind.business,
+      message: authExpired ? '登录状态已失效，请重新登录' : (envelope.message.isEmpty ? '上传失败（HTTP ${httpStatus ?? '-'}）' : envelope.message),
+      code: envelope.code,
+      httpStatus: httpStatus,
+      failCode: envelope.failCode,
+    );
   }
 
   Future<Object?> _send(

@@ -28,6 +28,9 @@ abstract final class ImErrorCodes {
   /// 账号被拉入黑名单。
   static const int accountBlocked = 70051;
 
+  /// 请求的用户账号未导入 IM（ERR_SVR_ACCOUNT_NOT_IMPORTED）。
+  static const int accountNotImported = 70107;
+
   /// 可通过「重新签发 userSig 后再登录」恢复的错误码集合。
   ///
   /// 注意：与方案文档不同，这里**不含 70014**——它表示 SDKAppID 与签发时不一致，属于配置错误，续期无法解决。
@@ -52,6 +55,9 @@ abstract final class ImErrorCodes {
     if (networkUnavailable.contains(code)) return '网络不可用，请检查网络后重试';
     if (isConfigurationError(code)) return '应用配置异常（$code），请联系管理员';
     if (code == accountBlocked) return '账号已被限制登录，请联系管理员';
+    if (code == accountNotImported) {
+      return 'IM 账号未导入（70107），请后端在对应 SDKAppID 下导入该 UserID，或检查会话对象是否未导入';
+    }
     if (code == kickedOffByOther) return '账号已在其他设备登录';
     if (isUserSigExpired(code)) return '登录凭证已过期，请重新登录';
     return '连接聊天服务失败（$code）';

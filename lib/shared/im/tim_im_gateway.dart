@@ -12,6 +12,7 @@ import 'package:tencent_cloud_chat_uikit/theme/tui_theme.dart';
 import 'package:tencent_cloud_chat_uikit/ui/utils/screen_utils.dart';
 
 import '../utils/app_logger.dart';
+import 'im_error_codes.dart';
 import 'im_gateway.dart';
 
 /// 基于腾讯云 IM Flutter SDK + UIKit 分支的网关实现（macOS / Windows 均走同一套代码，原生库由 SDK 插件提供）。
@@ -81,7 +82,14 @@ class TimImGateway implements ImGateway {
         final text = callback.infoRecommendText;
         if (text != null && text.isNotEmpty) onNotice?.call(text);
       case TIMCallbackType.API_ERROR:
-        _log.warn('UIKit API 错误 code=${callback.errorCode}');
+        final code = callback.errorCode ?? -1;
+        final hint = ImErrorCodes.describe(code);
+        final msg = callback.errorMsg;
+        if (msg != null && msg.isNotEmpty) {
+          _log.warn('UIKit API 错误 code=$code msg=$msg ($hint)');
+        } else {
+          _log.warn('UIKit API 错误 code=$code ($hint)');
+        }
       case TIMCallbackType.FLUTTER_ERROR:
         _log.warn('UIKit Flutter 错误', callback.catchError);
       case null:

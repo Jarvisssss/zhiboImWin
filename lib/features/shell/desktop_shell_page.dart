@@ -71,11 +71,13 @@ class _DesktopShellPageState extends State<DesktopShellPage> {
     }
 
     final convType = conv.type == 1 ? ConvType.c2c : ConvType.group;
+    // 勿传 conv.conversationID（形如 c2c_xxx）：拉历史需 userID/groupID。
+    // ValueKey：桌面分栏复用同一 TIMUIKitChat 时，UIKit 仅监听 conversationID 变化才会重置模型；用 Key 强制按会话重建（等同 App 每次 push ChatPage）。
     return TIMUIKitChat(
+      key: ValueKey(conv.conversationID),
       controller: _chatController,
       conversation: conv,
       conversationType: convType,
-      conversationID: conv.conversationID,
       conversationShowName: conv.showName,
       config: const TIMUIKitChatConfig(isShowReadingStatus: true),
       messageItemBuilder: MessageItemBuilder(

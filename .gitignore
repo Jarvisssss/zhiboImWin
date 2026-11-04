@@ -28,6 +28,7 @@ config/env.local.json
 .local-logs/
 
 # Flutter/Dart/Pub related
+devtools_options.yaml
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/

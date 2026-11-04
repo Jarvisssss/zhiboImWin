@@ -158,10 +158,13 @@ class ImSessionManager {
       }
 
       if (result.ok) {
+        _log.info(
+          'IM 已连接 imUserId=${AppLogger.redact(sign.imUserId)} sdkAppId=${sign.sdkAppId}',
+        );
         _emit(const ImSessionState.connected());
         return _state;
       }
-      _log.warn('IM 登录失败 code=${result.code}');
+      _log.warn('IM 登录失败 code=${result.code} desc=${result.desc}');
       return _fail(
         result.code,
         ImErrorCodes.describe(result.code),

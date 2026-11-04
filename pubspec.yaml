@@ -19,8 +19,7 @@ dependencies:
   # ───────────── 腾讯云 IM ─────────────
   # 与 App(study_app) 保持完全一致的 SDK 版本，保证协议/行为一致。
   tencent_cloud_chat_sdk: 8.8.7357
-  # App 维护的 UIKit 分支(5.0.1)：已含 rich_media_message / large_file_message / 语音手势 / 桌面宽屏布局。
-  # 本地开发默认使用与本仓库同级的 study_app 检出目录；CI/其它机器的 git 写法见 README「依赖管理」。
+  # App 维护的 UIKit 分支(5.0.1)：与 study_app 共用 ../study_app/chat-uikit-flutter，保证 IM/自定义消息/大文件等行为一致。
   tencent_cloud_chat_uikit:
     path: ../study_app/chat-uikit-flutter
 

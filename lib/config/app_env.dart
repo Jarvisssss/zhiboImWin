@@ -18,8 +18,15 @@ abstract final class AppDefines {
   /// 「班主任回复助手」扣子 Bot ID（可选，优先级低于后端 lstAiTch 下发的 scene=reply_assistant）。
   static const String aiReplyBotId = String.fromEnvironment('ZB_AI_REPLY_BOT_ID');
 
-  /// IM SDKAppID，仅在登录前需要预初始化 SDK（如冒烟测试）时使用；登录后以后端返回值为准。
-  static const int sdkAppId = int.fromEnvironment('ZB_SDK_APP_ID');
+  /// 腾讯云 IM SDKAppID（`ZB_SDK_APP_ID`）。登录/续期时后端未返回 [sdkAppId] 时使用此值。
+  static const int sdkAppId = int.fromEnvironment('ZB_SDK_APP_ID', defaultValue: 1400327457);
+
+  /// 解析 IM SDKAppID：优先使用后端返回值（>0），否则使用 [fallbackSdkAppId] 或构建期 [sdkAppId]。
+  static int resolveSdkAppId(int fromBackend, {int? fallbackSdkAppId}) {
+    if (fromBackend > 0) return fromBackend;
+    final fallback = fallbackSdkAppId ?? sdkAppId;
+    return fallback > 0 ? fallback : 0;
+  }
 
   /// PC 版本检查接口完整地址（可选），为空时使用 `eipHost + /im/app/login/pcVersion`。
   static const String updateCheckUrl = String.fromEnvironment('ZB_UPDATE_CHECK_URL');

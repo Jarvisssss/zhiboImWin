@@ -23,8 +23,11 @@ abstract final class ImPaths {
   /// 扣子访问令牌（注意后端既有拼写 Acess）。
   static const String cozeToken = '/im/app/login/getCozeAcessToken';
 
-  /// COS 预签名上传凭证。
-  static const String presignedUrl = '/im/app/login/generatePresignedUrl';
+  /// COS 预签名上传凭证（V2，与 App [ImService.generatePresignedUpload] 一致）。
+  static const String presignedUrlV2 = '/im/app/login/generatePresignedUrlV2';
+
+  /// IM 聊天大文件 / 媒体直传的 `appType`（与后端 CosAppType 枚举一致）。
+  static const String cosAppTypeIm = 'im';
 
   /// fileId 解析为可播放/可下载地址。
   static const String queryByFileId = '/im/app/login/queryByFileId';
@@ -125,8 +128,8 @@ class ImApi {
   /// 获取 COS 预签名上传凭证。
   Future<PresignedUpload> generatePresignedUpload(String fileName, {AuthSession? session}) async {
     final data = await _client.get(
-      ImPaths.presignedUrl,
-      query: {'fileName': fileName},
+      ImPaths.presignedUrlV2,
+      query: {'fileName': fileName, 'appType': ImPaths.cosAppTypeIm},
       headers: _authHeaders(session),
     );
     if (data is Map) {
@@ -139,7 +142,7 @@ class ImApi {
     throw const ApiException(kind: ApiErrorKind.business, message: '获取上传凭证失败');
   }
 
-  /// 按 fileId 解析当前可访问地址；解析失败返回 `null`。
+  /// 按 fileId 解析当前可访问地址（App `/im/app/login/queryByFileId`）；PC 大文件请用 [CosApi.resolveFileHttpUrl]。
   Future<String?> resolveFileUrl(String fileId, {AuthSession? session}) async {
     if (fileId.trim().isEmpty) return null;
     final data = await _client.get(

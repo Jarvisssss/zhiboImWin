@@ -14,6 +14,7 @@ import '../shared/im/tim_im_gateway.dart';
 import '../shared/network/api_client.dart';
 import '../shared/network/api_envelope.dart';
 import '../shared/network/auth_header_strategy.dart';
+import '../shared/services/cos_api.dart';
 import '../shared/services/im_api.dart';
 
 /// 应用级依赖容器（进程内单例，测试时可替换）。
@@ -37,6 +38,10 @@ class DependencyContainer {
     final imApi = ImApi(
       client: eipApi,
       headerStrategy: headerStrategy,
+      sessionProvider: () => authCubit.state.session,
+    );
+    final cosApi = CosApi(
+      client: eipApi,
       sessionProvider: () => authCubit.state.session,
     );
 
@@ -67,6 +72,7 @@ class DependencyContainer {
       store: store,
       authCubit: authCubit,
       imApi: imApi,
+      cosApi: cosApi,
       imSessionManager: imSessionManager,
       imEventHub: imEventHub,
       gateway: gateway,
@@ -77,6 +83,7 @@ class DependencyContainer {
     required this.store,
     required this.authCubit,
     required this.imApi,
+    required this.cosApi,
     required this.imSessionManager,
     required this.imEventHub,
     required this.gateway,
@@ -90,6 +97,9 @@ class DependencyContainer {
 
   /// IM 业务接口。
   final ImApi imApi;
+
+  /// 小程序同源 COS 上传 / fileId 解析。
+  final CosApi cosApi;
 
   /// IM 连接管理。
   final ImSessionManager imSessionManager;

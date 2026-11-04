@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../config/app_env.dart';
 import 'user_role.dart';
 
 /// IM 登录凭据，对应 `GET /im/app/login/getUserSig` 的 `result`。
@@ -31,8 +32,11 @@ class ImSign extends Equatable {
     if (json is! Map) return null;
     final userSig = '${json['userSig'] ?? json['imUserSig'] ?? ''}';
     final imUserId = '${json['imUserId'] ?? ''}';
-    final sdkAppId = _asInt(json['sdkAppId']);
-    if (userSig.isEmpty || imUserId.isEmpty || sdkAppId == null || sdkAppId <= 0) {
+    if (userSig.isEmpty || imUserId.isEmpty) {
+      return null;
+    }
+    final sdkAppId = AppDefines.resolveSdkAppId(_asInt(json['sdkAppId']) ?? 0);
+    if (sdkAppId <= 0) {
       return null;
     }
     return ImSign(
